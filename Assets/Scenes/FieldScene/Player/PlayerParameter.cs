@@ -6,8 +6,8 @@ using UnityEditor.VersionControl;
 using UnityEngine;
 
 /// <Summary>
-/// PlayerParam・GunParam・SmashParamを取得し格納する
-/// Paramの値を増減させる目的のクラス
+/// PlayerParamを取得し格納する、
+/// また取得したParamの値を増減させる目的のクラス
 /// </Summary>
 public class PlayerParameter : MonoBehaviour, IParametable
 {
@@ -42,11 +42,13 @@ public class PlayerParameter : MonoBehaviour, IParametable
 
     private void Start()
     {
+        //PlayerParamを取得
         param = GameObject.Find("ParamReceiver").GetComponent<ParamReceiver>().PlayerParam;
+        //パラメーターをディクショナリーに設定
         SettingParameter();
 
         SettingGunPrefab(); //銃のオブジェクトを生成し、位置を調整する
-        SetEventOnGameClear();
+        SetEventOnGameClear(); //ゲームクリアー時のイベントを設定
     }
 
     private void SettingParameter()
