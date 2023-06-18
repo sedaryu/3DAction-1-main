@@ -34,6 +34,8 @@ public class MainMode : MonoBehaviour
         modeUIs.ForEach(x => x.onClicked += backUI.SetVisible);
 
         cameraController = GameObject.Find("Main Camera").GetComponent<CameraController>();
+
+        Debug.Log("OK!!!!");
     }
 
     public async Task<Task> SetMainMode()
