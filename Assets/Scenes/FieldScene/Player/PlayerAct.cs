@@ -137,8 +137,6 @@ public class PlayerAct : MonoBehaviour
         if (smasher.RemoveColliderInSmashers()) return;
         stater.TransferState("Damageable", false);
         stater.TransferState("Movable", false);
-        //StartCoroutine(stater.WaitForStatusTransition("Damageable", parameter.SmashTime * 1.25f));
-        //StartCoroutine(stater.WaitForStatusTransition("Movable", parameter.SmashTime));
         Task smash = await smasher.Smash();
         StartCoroutine(stater.WaitForStatusTransition("Damageable", parameter.SmashTime * 0.25f));
         stater.TransferState("Movable", true);

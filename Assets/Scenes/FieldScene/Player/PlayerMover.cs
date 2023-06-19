@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// 
+/// </summary>
 public class PlayerMover : MonoBehaviour
 {
     //キャラクターの移動はNavMeshAgentで行う

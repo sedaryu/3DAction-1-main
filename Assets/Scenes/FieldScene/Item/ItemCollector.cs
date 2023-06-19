@@ -4,14 +4,16 @@ using System.Data.Common;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events;
 using UnityEngine.UIElements;
 
-public class ItemCollector : MonoBehaviour, IParametable
+public class ItemCollector : MonoBehaviour
 {
     [SerializeField] private int collectCount;
     [SerializeField] private float timeCount;
 
-    private List<ItemParam> collectItems = new List<ItemParam>();
+    public List<ItemParam> CollectedItems => collectedItems;
+    private List<ItemParam> collectedItems = new List<ItemParam>();
     private int countOfCollecting = 0;
     private float time;
 
@@ -22,7 +24,7 @@ public class ItemCollector : MonoBehaviour, IParametable
     private Transform player;
 
     private List<IPlayerUI> playerUIs;
-    private GameController gameController;
+    public UnityAction<GameController.ClearConditions> onGameClear;
 
     // Start is called before the first frame update
     void Start()
@@ -36,8 +38,6 @@ public class ItemCollector : MonoBehaviour, IParametable
         playerUIs = canvas.GetComponentsInChildren<IPlayerUI>().ToList();
         time = timeCount;
         playerUIs?.ForEach(x => x.UpdateUI("CollectorTime", time));
-
-        SetEventOnGameClear();
     }
 
     // Update is called once per frame
@@ -57,7 +57,7 @@ public class ItemCollector : MonoBehaviour, IParametable
 
     public void CollectItems(List<ItemParam> items)
     { 
-        collectItems.AddRange(items);
+        collectedItems.AddRange(items);
         countOfCollecting++;
         MovePosition();
         time = timeCount;
@@ -69,7 +69,7 @@ public class ItemCollector : MonoBehaviour, IParametable
     {
         if (collectCount <= countOfCollecting) 
         {
-            gameController.JudgeGameClear(GameController.ClearConditions.ItemCollected);
+            onGameClear?.Invoke(GameController.ClearConditions.ItemCollected);
         }
     }
 
@@ -89,16 +89,5 @@ public class ItemCollector : MonoBehaviour, IParametable
         { return; }
 
         transform.position = position;
-    }
-
-    public void SetEventOnGameClear()
-    {
-        gameController = GameObject.Find("GameController").GetComponent<GameController>();
-        gameController.onGameClear += SetParamToNextScene;
-    }
-
-    public void SetParamToNextScene()
-    {
-        gameController.collectItems = collectItems;
     }
 }

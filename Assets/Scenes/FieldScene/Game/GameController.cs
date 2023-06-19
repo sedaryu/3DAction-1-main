@@ -9,12 +9,12 @@ using UnityEngine.UI;
 public class GameController : MonoBehaviour
 {
     [SerializeField] private ClearConditions gameClearCondition;
+    private PlayerParameter playerParameter;
+    private ItemCollector itemCollector;
 
     public List<ItemParam> collectItems;
     public float life;
     public StageParam stageParam;
-
-    public UnityAction onGameClear;
 
     public enum ClearConditions
     { 
@@ -26,7 +26,10 @@ public class GameController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        playerParameter = GameObject.Find("Player").GetComponent<PlayerParameter>();
+        playerParameter.onGameOver += GameOver;
+        itemCollector = GameObject.Find("ItemCollector").GetComponent<ItemCollector>();
+        itemCollector.onGameClear += JudgeGameClear;
     }
 
     public void JudgeGameClear(ClearConditions condition)
@@ -36,7 +39,6 @@ public class GameController : MonoBehaviour
         Time.timeScale = 0;
         GameObject.Find("Canvas").transform.Find("GameClearText").gameObject.SetActive(true);
 
-        onGameClear?.Invoke();
         StartCoroutine(TransferScene());
     }
 
@@ -74,8 +76,8 @@ public class GameController : MonoBehaviour
         SceneManager.sceneLoaded -= SetCollectItemsToNextScene;
         ResultMode resulter = GameObject.Find("Menu").GetComponent<ResultMode>();
         resulter.isResultable = true;
-        resulter.collectItems = collectItems;
-        resulter.life = life;
+        resulter.collectItems = itemCollector.CollectedItems;
+        resulter.life = playerParameter.Parameter("Life");
         GameObject.Find("Canvas").transform.Find("NextStage").GetComponent<NextStageUI>().prevStageParam = stageParam;
     }
 }

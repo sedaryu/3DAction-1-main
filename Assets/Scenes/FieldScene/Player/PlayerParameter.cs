@@ -4,13 +4,16 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor.VersionControl;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <Summary>
 /// PlayerParamを取得し格納する、
 /// また取得したParamの値を増減させる目的のクラス
 /// </Summary>
-public class PlayerParameter : MonoBehaviour, IParametable
+public class PlayerParameter : MonoBehaviour
 {
+    public UnityAction onGameOver;
+
     private PlayerParam param;
 
     //スマッシュ
@@ -46,9 +49,7 @@ public class PlayerParameter : MonoBehaviour, IParametable
         param = GameObject.Find("ParamReceiver").GetComponent<ParamReceiver>().PlayerParam;
         //パラメーターをディクショナリーに設定
         SettingParameter();
-
         SettingGunPrefab(); //銃のオブジェクトを生成し、位置を調整する
-        SetEventOnGameClear(); //ゲームクリアー時のイベントを設定
     }
 
     private void SettingParameter()
@@ -73,23 +74,30 @@ public class PlayerParameter : MonoBehaviour, IParametable
     /// </summary>
     private void SettingGunPrefab()
     {
-        Gun gunObject = Instantiate(Gun);
+        Gun gunObject = Instantiate(Gun); //オブジェクトを生成
         string path = "Armature | Humanoid/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand";
-        gunObject.transform.parent = GameObject.Find("Player").transform.Find(path);
+        gunObject.transform.parent = GameObject.Find("Player").transform.Find(path); //親オブジェクトのトランスフォームを取得
+        //位置・角度・大きさを調整
         gunObject.transform.localPosition = new Vector3(0, 0.25f, 0);
         gunObject.transform.localRotation = Quaternion.Euler(-90, 180, -90);
         gunObject.transform.localScale = new Vector3(3, 3, 3);
-        GunEffect = gunObject.transform.Find("ShotEffect").GetComponent<ParticleSystem>();
+        GunEffect = gunObject.transform.Find("ShotEffect").GetComponent<ParticleSystem>(); //銃固有のパーティクルを取得
     }
 
+    /// <summary>
+    /// パラメーターを増減させるメソッド
+    /// </summary>
+    /// <param name="key">増減させたいパラメーターのKey</param>
+    /// <param name="param">増減の値</param>
+    /// <exception cref="NullReferenceException"></exception>
     public void ChangeParameter(string key, float param)
     {
-        if (!parameter.ContainsKey(key)) throw new NullReferenceException();
-        if (parameter[key] + param < 0) parameter[key] = 0;
-        else if (parameter[key + "Max"] < parameter[key] + param) parameter[key] = parameter[key + "Max"];
-        else parameter[key] += param;
+        if (!parameter.ContainsKey(key)) throw new NullReferenceException(); //存在しないKeyならばnullを返す
+        if (parameter[key] + param < 0) parameter[key] = 0; //増減の結果パラメーターの値がマイナスになるのを防ぐ
+        else if (parameter[key + "Max"] < parameter[key] + param) parameter[key] = parameter[key + "Max"]; //値が規定値以上になるのを防ぐ
+        else parameter[key] += param; //0以上規定値以下ならば
 
-        EffectOfParameterChange(key);
+        EffectOfParameterChange(key); //増減の結果発生するそれぞれのパラメーター固有の処理を実行
     }
 
     public void SetParameter(string key, float param)
@@ -107,10 +115,10 @@ public class PlayerParameter : MonoBehaviour, IParametable
         switch (key)
         {
             case "Life":
-                if (parameter["Life"] == 0)
+                if (parameter["Life"] == 0) //ライフが0になった場合
                 {
-                    GameObject.Find("GameController").GetComponent<GameController>().GameOver();
-                    Destroy(gameObject);
+                    onGameOver?.Invoke(); //ゲームオーバー時の処理を実行
+                    Destroy(gameObject); //プレイヤーのオブジェクトを破壊
                 }
                 break;
 
@@ -136,15 +144,5 @@ public class PlayerParameter : MonoBehaviour, IParametable
     public void RevertParameter(string key)
     {
         parameter[key] = parameter[key + "Max"];
-    }
-
-    public void SetEventOnGameClear()
-    {
-        GameObject.Find("GameController").GetComponent<GameController>().onGameClear += SetParamToNextScene;
-    }
-
-    public void SetParamToNextScene()
-    {
-        GameObject.Find("GameController").GetComponent<GameController>().life = parameter["Life"];
     }
 }
